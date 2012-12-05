@@ -1,8 +1,6 @@
 process.env.EC2_HOME = __dirname + '/ec2-api-tools-1.6.5.2';
 process.env.PATH += ':' + process.env.EC2_HOME;
 
-console.log( 'EC2_HOME: ' + process.env.EC2_HOME );
-
 var tool_bin = process.env.EC2_HOME + '/bin/';
 
 function Ec2() {
