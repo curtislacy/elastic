@@ -1,5 +1,6 @@
 process.env.EC2_HOME = __dirname + '/ec2-api-tools-1.6.5.2';
-process.env.PATH += ':' + process.env.EC2_HOME;
+process.env.AWS_CLOUDWATCH_HOME= __dirname + '/CloudWatch-1.0.13.4';
+process.env.PATH += ':' + process.env.EC2_HOME + ':' + process.env.AWS_CLOUDWATCH_HOME;
 
 var tool_bin = process.env.EC2_HOME + '/bin/';
 
