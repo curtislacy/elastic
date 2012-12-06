@@ -9,7 +9,7 @@ var cloudwatch_bin = process.env.AWS_CLOUDWATCH_HOME + '/bin/';
 function Ec2() {
 }
 //./mon-get-stats CPUUtilization --namespace "AWS/EC2" --statistics "Minimum,Maximum,Average" --headers --period 60 --dimensions "InstanceId=i-37211948"
-Ec2.prototype.getAverageCPUUtilization = function( instanceId, callback ) {
+Ec2.prototype.getAverageCPUUtilization = function( region, instanceId, callback ) {
 	( require( './lib/SpawnProcess' ) )( 
 		cloudwatch_bin + 'mon-get-stats',
 		[ 
@@ -18,7 +18,8 @@ Ec2.prototype.getAverageCPUUtilization = function( instanceId, callback ) {
 			'--statistics', '"Average"', 
 			'--headers' ,
 			'--period', 60,
-			'--dimensions', '"InstanceId=i-37211948"' ],
+			'--region', region,
+			'--dimensions', '"InstanceId=' + instanceId + '"' ],
 		function( output ) {
 			var newestEntry = null;
 
@@ -30,11 +31,11 @@ Ec2.prototype.getAverageCPUUtilization = function( instanceId, callback ) {
 				if( !newestEntry || date.valueOf() > newestEntry.timestamp )
 					newestEntry = {
 						"timestamp": date.valueOf(),
-						"fraction": splitData[2]
+						"percent": splitData[2]
 					};
 			});
 			
-			callback( null, newestEntry.fraction * 100 );
+			callback( null, newestEntry.percent );
 		},
 		function( errors ) {
 			callback( errors, null );
