@@ -1,14 +1,49 @@
-process.env.EC2_HOME = __dirname + '/ec2-api-tools-1.6.5.2';
-process.env.AWS_CLOUDWATCH_HOME= __dirname + '/CloudWatch-1.0.13.4';
-process.env.PATH += ':' + process.env.EC2_HOME + ':' + process.env.AWS_CLOUDWATCH_HOME;
+var moment = require( 'moment' );
 
-var tool_bin = process.env.EC2_HOME + '/bin/';
+process.env.EC2_HOME = __dirname + '/ec2-api-tools-1.6.5.2';
+process.env.AWS_CLOUDWATCH_HOME = __dirname + '/CloudWatch-1.0.13.4';
+
+var ec2_bin = process.env.EC2_HOME + '/bin/';
+var cloudwatch_bin = process.env.AWS_CLOUDWATCH_HOME + '/bin/';
 
 function Ec2() {
 }
+//./mon-get-stats CPUUtilization --namespace "AWS/EC2" --statistics "Minimum,Maximum,Average" --headers --period 60 --dimensions "InstanceId=i-37211948"
+Ec2.prototype.getAverageCPUUtilization = function( instanceId, callback ) {
+	( require( './lib/SpawnProcess' ) )( 
+		cloudwatch_bin + 'mon-get-stats',
+		[ 
+			'CPUUtilization',
+			'--namespace', '"AWS/EC2"', 
+			'--statistics', '"Average"', 
+			'--headers' ,
+			'--period', 60,
+			'--dimensions', '"InstanceId=i-37211948"' ],
+		function( output ) {
+			var newestEntry = null;
+
+			var dataLines = output.match( /[0-9\-]+ [0-9:]+ +[0-9\.]+ +Percent/g );
+			dataLines.forEach( function( line ) {
+				var splitData = line.match( /([0-9\-]+ [0-9:]+) +([0-9\.]+) +Percent/ );
+
+				var date = moment( splitData[1] );
+				if( !newestEntry || date.valueOf() > newestEntry.timestamp )
+					newestEntry = {
+						"timestamp": date.valueOf(),
+						"fraction": splitData[2]
+					};
+			});
+			
+			callback( null, newestEntry.fraction * 100 );
+		},
+		function( errors ) {
+			callback( errors, null );
+		}
+	);	
+}
 Ec2.prototype.getRunningInstances = function( region, callback ) {
 	( require( './lib/SpawnProcess' ) )( 
-		tool_bin + 'ec2-describe-instances',
+		ec2_bin + 'ec2-describe-instances',
 		[ '--region', region ],
 		function( output ) {
 			var instances = [];
@@ -32,7 +67,7 @@ Ec2.prototype.getRunningInstances = function( region, callback ) {
 }
 Ec2.prototype.getAMIs = function( region, callback ) {
 	( require( './lib/SpawnProcess' ) )( 
-		tool_bin + 'ec2-describe-images',
+		ec2_bin + 'ec2-describe-images',
 		[ '--region', region ],
 		function( output ) {
 			var images = [];
@@ -64,7 +99,7 @@ ec2-terminate-instances --region us-east-1 i-b0c134ce
 */
 Ec2.prototype.terminateInstance = function( region, instance, callback ) {
 	( require( './lib/SpawnProcess' ) )( 
-		tool_bin + 'ec2-terminate-instances',
+		ec2_bin + 'ec2-terminate-instances',
 		[ '--region', region, instance ],
 		function( output ) {
 			callback( null );
@@ -76,7 +111,7 @@ Ec2.prototype.terminateInstance = function( region, instance, callback ) {
 }
 Ec2.prototype.launchInstance = function( region, image, keypair, type, callback ) {
 	( require( './lib/SpawnProcess' ) )( 
-		tool_bin + 'ec2-run-instances',
+		ec2_bin + 'ec2-run-instances',
 		[ '--region', region, '-n', 1, '-k', keypair, '-t', type, image ],
 		function( output ) {
 			var instances = [];
