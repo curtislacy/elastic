@@ -2,9 +2,11 @@ var moment = require( 'moment' );
 
 process.env.EC2_HOME = __dirname + '/ec2-api-tools-1.6.5.2';
 process.env.AWS_CLOUDWATCH_HOME = __dirname + '/CloudWatch-1.0.13.4';
+process.env.AWS_ELB_HOME = __dirname + '/ElasticLoadBalancing-1.0.17.0';
 
 var ec2_bin = process.env.EC2_HOME + '/bin/';
 var cloudwatch_bin = process.env.AWS_CLOUDWATCH_HOME + '/bin/';
+var elb_bin = process.env.AWS_ELB_HOME + '/bin/';
 
 function Ec2() {
 }
@@ -41,6 +43,55 @@ Ec2.prototype.getAverageCPUUtilization = function( region, instanceId, callback 
 			callback( errors, null );
 		}
 	);	
+}
+Ec2.prototype.getElasticLoadBalancers = function( region, callback ) {
+	( require( './lib/SpawnProcess' ) )( 
+		elb_bin + 'elb-describe-lbs',
+		[ 
+			'--region', region
+		],
+		function( output ) {
+			var balancers = [];
+			var dataLines = output.match( /LOAD_BALANCER +[A-Za-z0-9\-]+ +[A-Za-z0-9\-\.]+/g );
+			dataLines.forEach( function( line ) {
+				var matches = line.match( /LOAD_BALANCER +([A-Za-z0-9\-]+) +([A-Za-z0-9\-\.]+)/ );
+				var info = {
+					"name": matches[1],
+					"external": matches[2]
+				};
+				balancers.push( info );
+			});
+			callback( null, balancers );
+		},
+		function( errors ) {
+			callback( errors, null );
+		}
+	);		
+}
+Ec2.prototype.getBalancedInstances = function( region, balancerName, callback ) {
+	( require( './lib/SpawnProcess' ) )( 
+		elb_bin + 'elb-describe-instance-health',
+		[ 
+			balancerName,
+			'--region', region
+		],
+		function( output ) {
+			var instances = [];
+			var dataLines = output.match( /INSTANCE_ID +[A-Za-z0-9\-]+ +[A-Za-z0-9\-\.]+/g );
+			dataLines.forEach( function( line ) {
+				var matches = line.match( /INSTANCE_ID +([A-Za-z0-9\-]+) +([A-Za-z0-9\-\.]+)/ );
+				var info = {
+					"instance": matches[1],
+					"state": matches[2]
+				};
+				instances.push( info );
+			});
+			callback( null, instances );
+		},
+		function( errors ) {
+			callback( errors, null );
+		}
+	);		
 }
 Ec2.prototype.getRunningInstances = function( region, callback ) {
 	( require( './lib/SpawnProcess' ) )( 
@@ -90,14 +141,6 @@ Ec2.prototype.getAMIs = function( region, callback ) {
 		}
 	);
 }
-/*
-// Launch one new instance based on an AMI.
-ec2-run-instances --region us-east-1 -n 1 -k Elastic-Nova -t t1.micro ami-0d3aba64
-// That returns a bunch of information, the instance ID is in there.  (like INSTANCE  i-b0c134ce)
-
-// Terminate an instance
-ec2-terminate-instances --region us-east-1 i-b0c134ce
-*/
 Ec2.prototype.terminateInstance = function( region, instance, callback ) {
 	( require( './lib/SpawnProcess' ) )( 
 		ec2_bin + 'ec2-terminate-instances',
