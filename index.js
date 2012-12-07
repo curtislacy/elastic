@@ -56,6 +56,39 @@ Ec2.prototype.getAverageCPUUtilization = function( region, instanceId, callback 
 			callback( error, newestEntry.percent );
 		} );
 }
+Ec2.prototype.createElasticLoadBalancer = function( name, region, zones, ports, callback ) {
+	params = [ name ];
+	ports.forEach( function( port ) {
+		params.push( '--listener' );
+		params.push( '"protocol=' + port.protocol + ', lb-port=' + port.inputPort + ', instance-port=' + port.outputPort + '"' );
+	});
+	params.push( '--region' );
+	params.push( region );
+	params.push( '--availability-zones' );
+	params.push( this._assembleParamList( zones ) );
+
+	this._useCli( 
+		elb_bin + 'elb-create-lb', params,
+		'DNS_NAME[\t ]+([A-Za-z0-9\-\.]+)',
+		function( matches ) {
+			return {
+				external: matches[1]
+			}
+		},
+		callback );
+};
+Ec2.prototype._assembleListenerParams = function( ports ) {
+	var list = '"';
+	for( var i=0; i< ports.length; i++ )
+	{
+		list += 'prototcol=' + ports[i].protocol + ', lb-port=' + ports[i].inputPort + ', instance-port=' + ports[i].outputPort;
+		if( i < ports.length-1 )
+			list += ', ';
+	}
+	list += '"';
+	console.log( list );
+	return list;
+}
 Ec2.prototype.getElasticLoadBalancers = function( region, callback ) {
 	this._useCli( 
 		elb_bin + 'elb-describe-lbs',
@@ -161,5 +194,15 @@ Ec2.prototype.launchInstance = function( region, image, keypair, type, callback 
 			};
 		},
 		callback );
+}
+Ec2.prototype._assembleParamList = function( array ) {
+	var list = '';
+	for( var i=0; i<array.length; i++ )
+	{
+		list += array[ i ];
+		if( i < array.length-1 )
+			list += ','
+	}
+	return list;
 }
 module.exports = exports = new Ec2();
