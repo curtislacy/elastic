@@ -16,11 +16,14 @@ Ec2.prototype._useCli = function( command, args, parsingRegex, objectParser, cal
 		function( output ) {
 			var results = [];
 			var dataLines = output.match( new RegExp( parsingRegex, 'g' ) );
-			dataLines.forEach( function( line ) {
-				var matches = line.match( new RegExp( parsingRegex, '' ) );
-				if( matches )
-					results.push( objectParser( matches ) );
-			});
+			if( dataLines != null )
+			{
+				dataLines.forEach( function( line ) {
+					var matches = line.match( new RegExp( parsingRegex, '' ) );
+					if( matches )
+						results.push( objectParser( matches ) );
+				});
+			}
 			callback( null, results );
 		},
 		function( errors ) {
@@ -74,6 +77,22 @@ Ec2.prototype.createElasticLoadBalancer = function( name, region, zones, ports, 
 			return {
 				external: matches[1]
 			}
+		},
+		callback );
+};
+Ec2.prototype.deleteElasticLoadBalancer = function( name, region, callback ) {
+	this._useCli(
+		elb_bin + 'elb-delete-lb', 
+		[
+			name, 
+			'--region', region,
+			'--force'
+		],
+		'(.+)',
+		function( matches ) {
+			return {
+				output: matches[1]
+			};
 		},
 		callback );
 };
