@@ -46,6 +46,19 @@ cluster.start( function( error, clusterDns ) {
 });
 ```
 
+## Logging
+
+By default, elastic spouts progress and status reports to the console, but you can replace the logger with any object that has a '''log( message )``` function.  For example, this will prepend a message "CUSTOM!" to every log entry:
+
+```js
+var elastic = require( 'elastic' );
+elastic.setLogger( {
+	log: function( obj ) {
+		console.log( 'CUSTOM!' + obj );
+	}
+} );
+```
+
 # License
 
 Some components of this product are released under specific license terms.  See ```ec2-api-tools-1.6.5.2/THIRDPARTYLICENSE.TXT``` and ```ec2-api-tools-1.6.5.2/license.txt```.
