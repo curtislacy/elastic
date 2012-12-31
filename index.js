@@ -8,6 +8,25 @@ module.exports.LoadBalancedCluster = function( config ) {
 	return cluster;
 }
 
+var ShutdownComponents = require( './lib/Shutdown' );
+// A Shutdown Notifier is responsible for informing a remote system that it is about to be
+// shut down, and informing the local system when the remote has completed any shutdown tasks.
+module.exports.ShutdownNotifier = function( config ) {
+	var controller = new ShutdownComponents.Notifier( config );
+	controller.setLogger( defaultLogger );
+
+	return controller;
+}
+
+// A Shutdown Listener is responsible for receiving notification from the ShutdownController that
+// the system on which it is running is about to be shut down.
+module.exports.ShutdownListener = function( config ) {
+	var listener = new ShutdownComponents.Listener( config );
+	listener.setLogger( defaultLogger );
+
+	return listener;
+}
+
 module.exports.setLogger = function( logger ) {
 	defaultLogger = logger;
 	module.exports.ec2Client.setLogger( logger );
