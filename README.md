@@ -59,6 +59,55 @@ elastic.setLogger( {
 } );
 ```
 
+## Running tasks on a remote server before shutting it down.
+
+Part of autoscaling is shutting down servers in your cluster when they're no longer needed, and there may be things you want to do on them, such as recovering logs.  Elastic provides some mechanisms to accomodate this.
+
+For example, if you wanted to perform some task on an instance before it is shut down, you would add something similar to this on that server:
+
+```js
+var elastic = require( 'elastic' );
+
+var listener = new elastic.ShutdownListener ( {
+	listenPort: 3000,
+	onShutdown: function( callback ) {
+		console.log( 'Remote has been informed of its impending shutdown, and will claim to have finished its shutdown tasks in 10 sec.' );
+		setTimeout( function() {
+			console.log( 'Remote is reporting that it has finished shutdown tasks.' );
+			callback( null );
+		}, 10000 );
+	}
+} );
+```
+
+This will result in a simple express server running on that instance which executes the "onShutdown" function when informed that it is about to be shut down.  On the machine coordinating the server shutdowns:
+
+```js
+var elastic = require( 'elastic' );
+
+var notifier = new elastic.ShutdownNotifier( {
+	notifyPort: 3000,
+});
+```
+
+will create a simple object which informs the a given server of an impending shutdown.  Sending the shutdown notification can then be done thusly:
+
+```js
+notifier.announceShutdown( '127.0.0.1', function( error ) {
+	if( error )
+	{
+		console.log( "Controller detected an error informing remote of shutdown." );
+		console.log( error );
+	}
+	else
+	{
+		console.log( 'Controller has been informed that the remote system has completed shutdown tasks.' );
+	}
+	// Go on to actually command shutdown of the remote instance.
+} );
+```
+
+
 # License
 
 Some components of this product are released under specific license terms.  See ```ec2-api-tools-1.6.5.2/THIRDPARTYLICENSE.TXT``` and ```ec2-api-tools-1.6.5.2/license.txt```.
