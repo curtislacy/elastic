@@ -37,3 +37,5 @@ module.exports.setLogger( {
 			console.log( obj );
 		}
 	} );
+
+module.exports.spawnProcess = require( './lib/SpawnProcess' );
