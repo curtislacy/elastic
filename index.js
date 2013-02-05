@@ -27,6 +27,14 @@ module.exports.ShutdownListener = function( config ) {
 	return listener;
 }
 
+// A LogExporter is responsible for periodically bundling up log files and pushing them to S3.
+module.exports.S3LogExporter = function( config ) {
+	var exporter = new( require( './lib/S3LogExporter' ))( config );
+	exporter.setLogger( defaultLogger );
+
+	return exporter;
+}
+
 module.exports.setLogger = function( logger ) {
 	defaultLogger = logger;
 	module.exports.ec2Client.setLogger( logger );
