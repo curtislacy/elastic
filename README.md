@@ -106,7 +106,38 @@ notifier.announceShutdown( '127.0.0.1', function( error ) {
 	// Go on to actually command shutdown of the remote instance.
 } );
 ```
+# Executing arbitrary commands on a remote server
 
+You may find that you need to execute arbitrary commands on a remote server.  If the remote system is running an SSH server, and your local system has SSH installed, and you are using public-key authentication (It feels like a lot, but EC2 linux instances generally work this way), you can use ssh to execute arbitrary commands on a remote server and get the results.  Here's a sample:
+
+```js
+var elastic = require( 'elastic' );
+
+var remoteServer = new elastic.RemoteSystem( {
+	'key': '/Users/cmlacy/SSH-Keys/EC2PrivateKey.pem',
+	'user': 'ubuntu',
+	'address': 'ec2-50-17-85-113.compute-1.amazonaws.com'
+} );
+
+remoteServer.exec( 'cd directory-I-care-about ; ls -al', function( error, result ) {
+	if( error )
+		console.log( 'ERROR: ' + require( 'util' ).inspect( error ) );
+	else
+	{
+		console.log( result );
+		remoteServer.exec( 'df -h', function( error, result ) {
+			if( error )
+				console.log( 'ERROR: ' + require( 'util' ).inspect( error ) );
+			else
+			{
+				console.log( result );
+			}
+		});
+
+	}
+});
+```
+That will connect to the server specified using the given private key file, and execute a directory change and ```ls -l```.  If that is successful, it will then connect again and get the disk usage report.  Results of the exec are returned as strings.
 
 # License
 
