@@ -43,6 +43,8 @@ module.exports.RemoteSystem = function( config ) {
 	return remoteSystem;
 }
 
+module.exports.Util = require( './lib/InstanceUtil' );
+
 module.exports.setLogger = function( logger ) {
 	defaultLogger = logger;
 	module.exports.ec2Client.setLogger( logger );

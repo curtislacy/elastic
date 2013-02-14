@@ -137,7 +137,57 @@ remoteServer.exec( 'cd directory-I-care-about ; ls -al', function( error, result
 	}
 });
 ```
+
 That will connect to the server specified using the given private key file, and execute a directory change and ```ls -l```.  If that is successful, it will then connect again and get the disk usage report.  Results of the exec are returned as strings.
+
+# Waiting for a server to start up before issuing commands.
+
+If you start a new EC2 instance, some time will pass between starting the instance and it becoming available for SSH commands.  Elastic has a utility function which makes it easy to wait until a new instance has started up, ping it periodically to see when it becomes available for login, and then begin issuing commands to it:
+
+```js
+var elastic = require( 'elastic' );
+
+// Launch a stock Ubuntu 12.10 Server micro instance, and then run uname on it.
+elastic.ec2Client.launchInstance( 
+	'us-east-1', 'ami-7539b41c', 'Nova-Util', 't1.micro', 'sg-d4dba9bc', 
+	elastic.Util.waitForStartup( {
+			'zone': 'us-east-1',
+			'key': '/Users/cmlacy/SSH Keys/Nova-Util.pem',
+			'user': 'ubuntu',
+		}, 
+		function( error, launched ) {
+			if( error )
+				console.log( 'ERROR: ' + require( 'util' ).inspect( error ));
+			else
+			{
+				console.log( launched );
+				launched.remoteSystem.exec( 'uname -a', function( error, result ) {
+				if( error )
+					console.log( 'ERROR: ' + require( 'util' ).inspect( error ));
+				else
+					console.log( 'STARTED: ' + result );
+				} );
+			}
+		}
+	)
+);
+```
+The above results in the following output:
+```bash
+{ instance: 'i-932e25e3',
+  ami: 'ami-7539b41c',
+  external: 'ec2-54-234-197-107.compute-1.amazonaws.com',
+  internal: 'ip-10-203-37-142.ec2.internal',
+  type: 't1.micro',
+  zone: 'us-east-1b',
+  remoteSystem: 
+   { config: 
+      { key: '/Users/cmlacy/Dropbox/Engine/SSH Keys/Nova-Util.pem',
+        user: 'ubuntu',
+        address: 'ec2-54-234-197-107.compute-1.amazonaws.com' } } }
+STARTED: Linux ip-10-203-37-142 3.5.0-21-generic #32-Ubuntu SMP Tue Dec 11 18:51:59 UTC 2012 x86_64 x86_64 x86_64 GNU/Linux
+```
+Note that the ```launched``` object contains not only a lot of critical information about the new system, it also contains a RemoteSystem object (at the property ```remoteSystem```), which can be used to issue commands directly to the new system via SSH.
 
 # License
 
