@@ -35,6 +35,16 @@ module.exports.S3LogExporter = function( config ) {
 	return exporter;
 }
 
+// To execute commands on a remote system, you can use a RemoteSystem
+module.exports.RemoteSystem = function( config ) {
+	var remoteSystem = new( require( './lib/RemoteSystem' ))( config );
+	remoteSystem.setLogger( defaultLogger );
+
+	return remoteSystem;
+}
+
+module.exports.Util = require( './lib/InstanceUtil' );
+
 module.exports.setLogger = function( logger ) {
 	defaultLogger = logger;
 	module.exports.ec2Client.setLogger( logger );
