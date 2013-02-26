@@ -23,6 +23,14 @@ Elastic.prototype.LoadBalancedCluster = function( config ) {
 	return cluster;
 }
 
+module.exports.ProcessingCluster = function( config ) {
+	var cluster = new( require( './lib/ProcessingCluster' ))( config );
+	cluster.setLogger( defaultLogger );
+	cluster.setEc2Client( this.ec2Client );
+
+	return cluster;
+}
+
 // A Shutdown Notifier is responsible for informing a remote system that it is about to be
 // shut down, and informing the local system when the remote has completed any shutdown tasks.
 Elastic.prototype.ShutdownNotifier = function( config ) {
