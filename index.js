@@ -1,8 +1,9 @@
 var defaultLogger;
+var ec2Client = require( './lib/Ec2Client' );
 
-module.exports.ec2Client = require( './lib/Ec2Client' );
 module.exports.LoadBalancedCluster = function( config ) {
 	var cluster = new( require( './lib/LoadBalancedCluster' ))( config );
+	cluster.setEc2Client( ec2Client );
 	cluster.setLogger( defaultLogger );
 
 	return cluster;
@@ -47,7 +48,16 @@ module.exports.Util = require( './lib/InstanceUtil' );
 
 module.exports.setLogger = function( logger ) {
 	defaultLogger = logger;
-	module.exports.ec2Client.setLogger( logger );
+	ec2Client.setLogger( logger );
+}
+
+module.exports.setEc2Client = function( client ) {
+	ec2Client = client;
+	ec2Client.setLogger( defaultLogger );
+}
+
+module.exports.getEc2Client = function() {
+	return ec2Client;
 }
 
 module.exports.setLogger( {
