@@ -1,5 +1,6 @@
 var defaultLogger;
 var ec2Client = require( './lib/Ec2Client' );
+var processHandler = require( './lib/SpawnProcess' );
 
 module.exports.LoadBalancedCluster = function( config ) {
 	var cluster = new( require( './lib/LoadBalancedCluster' ))( config );
@@ -40,11 +41,15 @@ module.exports.S3LogExporter = function( config ) {
 module.exports.RemoteSystem = function( config ) {
 	var remoteSystem = new( require( './lib/RemoteSystem' ))( config );
 	remoteSystem.setLogger( defaultLogger );
+	remoteSystem.setProcessHandler( processHandler );
 
 	return remoteSystem;
 }
 
-module.exports.Util = require( './lib/InstanceUtil' );
+var Util = new ( require( './lib/InstanceUtil' ) )( module.exports );
+module.exports.Util = Util;
+Util.setProcessHandler( processHandler );
+Util.setEc2Client( ec2Client );
 
 module.exports.setLogger = function( logger ) {
 	defaultLogger = logger;
@@ -54,10 +59,16 @@ module.exports.setLogger = function( logger ) {
 module.exports.setEc2Client = function( client ) {
 	ec2Client = client;
 	ec2Client.setLogger( defaultLogger );
+	Util.setEc2Client( client );
 }
 
 module.exports.getEc2Client = function() {
 	return ec2Client;
+}
+
+module.exports.setProcessHandler = function( handler ) {
+	processHandler = handler;
+	Util.setProcessHandler( processHandler );
 }
 
 module.exports.setLogger( {
