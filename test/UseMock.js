@@ -25,7 +25,7 @@ describe( 'Elastic', function() {
 	});
 	describe( 'setProcessHandler', function() {
 		describe( 'should allow me to specify the handler that will deal with spawning native processes', function() {
-			var mockProcess = new( require( './mocks/MockProcess' ))();
+			var mockProcess = require( './mocks/MockProcess' );
 			var elastic = new ( require( '../index.js' ))();
 			elastic.setProcessHandler( mockProcess );
 			it( 'and that should be made available to RemoteSystems', function() {

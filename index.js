@@ -3,7 +3,7 @@ function Elastic() {
 	this.ec2Client = require( './lib/Ec2Client' );
 	this.processHandler = require( './lib/SpawnProcess' );
 
-	this.Util = new ( require( './lib/InstanceUtil' ) )( module.exports );
+	this.Util = new ( require( './lib/InstanceUtil' ) )( this );
 	this.Util.setProcessHandler( this.processHandler );
 	this.Util.setEc2Client( this.ec2Client );
 
@@ -76,6 +76,10 @@ Elastic.prototype.getEc2Client = function() {
 Elastic.prototype.setProcessHandler = function( handler ) {
 	this.processHandler = handler;
 	this.Util.setProcessHandler( this.processHandler );
+}
+
+Elastic.prototype.getProcessHandler = function() {
+	return this.processHandler;
 }
 
 module.exports = exports = Elastic;
