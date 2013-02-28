@@ -1,9 +1,3 @@
-// Change this based on your particular setup.
-/*process.env.JAVA_HOME = '/System/Library/Frameworks/JavaVM.framework/Home/';
-
-process.env.EC2_PRIVATE_KEY = __dirname + '/keys/pk-TQ2TH4KSYVEHHGJJG5KMQX5PLU662GQA.pem';
-process.env.EC2_CERT = __dirname + '/keys/cert-TQ2TH4KSYVEHHGJJG5KMQX5PLU662GQA.pem';
-*/
 var assert = require( 'assert' );
 
 describe( 'InstanceUtil', function() {

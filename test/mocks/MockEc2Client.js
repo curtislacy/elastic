@@ -1,11 +1,19 @@
 function MockEc2() {
 	this.amis = [];
 	this.instances = {};
+	this.utilizations = {};
 }
 MockEc2.prototype.setLogger = function( logger ) {
 	this.logger = logger;
 }
 MockEc2.prototype.getAverageCPUUtilization = function( region, instanceId, callback ) {
+	var self = this;
+	process.nextTick( function() {
+		callback( null, self.utilizations[ instanceId ] || 0 );
+	});
+}
+MockEc2.prototype.setCPUUtilization = function( instanceId, util ) {
+	this.utilizations[ instanceId ] = util;
 }
 MockEc2.prototype.createElasticLoadBalancer = function( name, region, zones, ports, callback ) {
 };
