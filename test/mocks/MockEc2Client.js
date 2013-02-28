@@ -1,6 +1,6 @@
 function MockEc2() {
 	this.amis = [];
-	this.instances = [];
+	this.instances = {};
 }
 MockEc2.prototype.setLogger = function( logger ) {
 	this.logger = logger;
@@ -18,9 +18,13 @@ MockEc2.prototype.addLoadBalancerAvailabilityZone = function( region, balancerNa
 MockEc2.prototype.getBalancedInstances = function( region, balancerName, callback ) {
 }
 MockEc2.prototype.getRunningInstances = function( region, callback ) {
-	var self = this;
+	var running = [];
+	for( var i in this.instances )
+		if( this.instances.hasOwnProperty( i ))
+			running.push( this.instances[ i ]);
+
 	process.nextTick( function() {
-		callback( null, self.instances );
+		callback( null, running );
 	});
 }
 MockEc2.prototype.getAMIs = function( region, callback ) {
@@ -34,6 +38,10 @@ MockEc2.prototype.setInstanceName = function( region, instance, name, callback )
 MockEc2.prototype.setInstanceTag = function( region, instance, tag, value, callback ) {
 }
 MockEc2.prototype.terminateInstance = function( region, instance, callback ) {
+	delete this.instances[ instance ];
+	process.nextTick( function() {
+		callback( null );
+	});
 }
 MockEc2.prototype.launchInstance = function( region, image, keypair, type, group, callback ) {
 	this.launchInstanceInAvailabilityZone( region, image, keypair, type, group, region + 'a', callback );
@@ -47,7 +55,7 @@ MockEc2.prototype.launchInstanceInAvailabilityZone = function( region, image, ke
 		type: type,
 		zone: zone
 	};
-	this.instances.push( newInstance );
+	this.instances[ newInstance.instance ] = newInstance;
 
 	process.nextTick( function() {
 		callback( null, [{
