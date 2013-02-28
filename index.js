@@ -23,9 +23,9 @@ Elastic.prototype.LoadBalancedCluster = function( config ) {
 	return cluster;
 }
 
-module.exports.ProcessingCluster = function( config ) {
-	var cluster = new( require( './lib/ProcessingCluster' ))( config );
-	cluster.setLogger( defaultLogger );
+Elastic.prototype.ProcessingCluster = function( config ) {
+	var cluster = new( require( './lib/ProcessingCluster' ))( this, config );
+	cluster.setLogger( this.defaultLogger );
 	cluster.setEc2Client( this.ec2Client );
 
 	return cluster;
