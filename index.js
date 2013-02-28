@@ -1,80 +1,81 @@
-var defaultLogger;
-var ec2Client = require( './lib/Ec2Client' );
-var processHandler = require( './lib/SpawnProcess' );
+function Elastic() {
+	this.defaultLogger = null;
+	this.ec2Client = require( './lib/Ec2Client' );
+	this.processHandler = require( './lib/SpawnProcess' );
 
-module.exports.LoadBalancedCluster = function( config ) {
+	this.Util = new ( require( './lib/InstanceUtil' ) )( module.exports );
+	this.Util.setProcessHandler( this.processHandler );
+	this.Util.setEc2Client( this.ec2Client );
+
+	this.setLogger( {
+		log: function( obj ) {
+			console.log( obj );
+		}
+	} );
+	this.spawnProcess = require( './lib/SpawnProcess' );
+}
+
+Elastic.prototype.LoadBalancedCluster = function( config ) {
 	var cluster = new( require( './lib/LoadBalancedCluster' ))( config );
-	cluster.setEc2Client( ec2Client );
-	cluster.setLogger( defaultLogger );
+	cluster.setEc2Client( this.ec2Client );
+	cluster.setLogger( this.defaultLogger );
 
 	return cluster;
 }
 
-var ShutdownComponents = require( './lib/Shutdown' );
 // A Shutdown Notifier is responsible for informing a remote system that it is about to be
 // shut down, and informing the local system when the remote has completed any shutdown tasks.
-module.exports.ShutdownNotifier = function( config ) {
-	var controller = new ShutdownComponents.Notifier( config );
-	controller.setLogger( defaultLogger );
+Elastic.prototype.ShutdownNotifier = function( config ) {
+	var controller = new ( require( './lib/Shutdown' )).Notifier( config );
+	controller.setLogger( this.defaultLogger );
 
 	return controller;
 }
 
 // A Shutdown Listener is responsible for receiving notification from the ShutdownController that
 // the system on which it is running is about to be shut down.
-module.exports.ShutdownListener = function( config ) {
-	var listener = new ShutdownComponents.Listener( config );
-	listener.setLogger( defaultLogger );
+Elastic.prototype.ShutdownListener = function( config ) {
+	var listener = new ( require( './lib/Shutdown' )).Listener( config );
+	listener.setLogger( this.defaultLogger );
 
 	return listener;
 }
 
 // A LogExporter is responsible for periodically bundling up log files and pushing them to S3.
-module.exports.S3LogExporter = function( config ) {
+Elastic.prototype.S3LogExporter = function( config ) {
 	var exporter = new( require( './lib/S3LogExporter' ))( config );
-	exporter.setLogger( defaultLogger );
+	exporter.setLogger( this.defaultLogger );
 
 	return exporter;
 }
 
 // To execute commands on a remote system, you can use a RemoteSystem
-module.exports.RemoteSystem = function( config ) {
+Elastic.prototype.RemoteSystem = function( config ) {
 	var remoteSystem = new( require( './lib/RemoteSystem' ))( config );
-	remoteSystem.setLogger( defaultLogger );
-	remoteSystem.setProcessHandler( processHandler );
+	remoteSystem.setLogger( this.defaultLogger );
+	remoteSystem.setProcessHandler( this.processHandler );
 
 	return remoteSystem;
 }
 
-var Util = new ( require( './lib/InstanceUtil' ) )( module.exports );
-module.exports.Util = Util;
-Util.setProcessHandler( processHandler );
-Util.setEc2Client( ec2Client );
-
-module.exports.setLogger = function( logger ) {
-	defaultLogger = logger;
-	ec2Client.setLogger( logger );
+Elastic.prototype.setLogger = function( logger ) {
+	this.defaultLogger = logger;
+	this.ec2Client.setLogger( logger );
 }
 
-module.exports.setEc2Client = function( client ) {
-	ec2Client = client;
-	ec2Client.setLogger( defaultLogger );
-	Util.setEc2Client( client );
+Elastic.prototype.setEc2Client = function( client ) {
+	this.ec2Client = client;
+	this.ec2Client.setLogger( this.defaultLogger );
+	this.Util.setEc2Client( client );
 }
 
-module.exports.getEc2Client = function() {
-	return ec2Client;
+Elastic.prototype.getEc2Client = function() {
+	return this.ec2Client;
 }
 
-module.exports.setProcessHandler = function( handler ) {
-	processHandler = handler;
-	Util.setProcessHandler( processHandler );
+Elastic.prototype.setProcessHandler = function( handler ) {
+	this.processHandler = handler;
+	this.Util.setProcessHandler( this.processHandler );
 }
 
-module.exports.setLogger( {
-		log: function( obj ) {
-			console.log( obj );
-		}
-	} );
-
-module.exports.spawnProcess = require( './lib/SpawnProcess' );
+module.exports = exports = Elastic;
