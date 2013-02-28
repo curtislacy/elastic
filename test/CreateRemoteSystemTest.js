@@ -38,16 +38,28 @@ describe( 'InstanceUtil', function() {
 			amiList.forEach( function( ami ) {
 				mockClient.addAMI( ami );
 			});
+			var data = {
+				region: 'us-east-1', 
+				ami: 'ami-0d3aba64',
+				key: 'EngineNLP',
+				type: 't1.micro',
+				group: 'default'
+			}
 			elastic.getEc2Client().launchInstance( 
-				'us-east-1', 'ami-0d3aba64', 'EngineNLP', 't1.micro', 'default',
+				data.region, data.ami, data.key, data.type, data.group,
 				elastic.Util.waitForStartup( {
 					'region': 'us-east-1',
 					'key': '/Dummy/Key/Path.pem',
 					'user': 'ubuntu'
 				},
 				function( error, launched ) {
-					console.log( error );
 					assert.equal( null, error );
+					assert.ok( launched.instance );
+					assert.equal( data.ami, launched.ami );
+					assert.ok( launched.internal );
+					assert.ok( launched.external );
+					assert.equal( data.type, launched.type );
+					assert.ok( launched.zone );
 					done();
 				}) );
 		});
