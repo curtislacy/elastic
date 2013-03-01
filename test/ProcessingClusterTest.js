@@ -31,6 +31,7 @@ describe( 'ProcessingCluster', function() {
 		it( 'will provide a RemoteSystem to process that task', function( done ) {
 			var cluster = elastic.ProcessingCluster( {
 				region: 'us-east-1',
+				zones: [ 'us-east-1a', 'us-east-1b', 'us-east-1d' ],
 				ami: 'ami-d19413b8',
 				keypair: 'NOVA-Util',
 				type: 't1.micro',
@@ -84,6 +85,7 @@ describe( 'ProcessingCluster', function() {
 		});
 		var clusterConfig = {
 			region: 'us-east-1',
+			zones: [ 'us-east-1a', 'us-east-1b', 'us-east-1d' ],
 			ami: 'ami-rapidsuccession',
 			keypair: 'NOVA-Util',
 			type: 't1.micro',
@@ -160,6 +162,7 @@ describe( 'ProcessingCluster', function() {
 		});
 		var clusterConfig = {
 			region: 'us-east-1',
+			zones: [ 'us-east-1a', 'us-east-1b', 'us-east-1d' ],
 			ami: 'ami-d19413b8',
 			keypair: 'NOVA-Util',
 			type: 't1.micro',
@@ -253,6 +256,7 @@ describe( 'ProcessingCluster', function() {
 		});
 		var clusterConfig = {
 			region: 'us-east-1',
+			zones: [ 'us-east-1a', 'us-east-1b', 'us-east-1d' ],
 			ami: 'ami-CPUpeg',
 			keypair: 'NOVA-Util',
 			type: 't1.micro',
@@ -264,7 +268,7 @@ describe( 'ProcessingCluster', function() {
 		cluster.setPollTime( 1000 );
 		cluster.start();
 
-		it( 'separate servers are launched for each task.', function( done ) {
+		it( 'separate servers are launched for each task across availability zones.', function( done ) {
 			var remotes = [];
 
 			async.parallel( [
@@ -347,11 +351,16 @@ describe( 'ProcessingCluster', function() {
 				],
 				function( error ) {
 					var distinct = [];
+					var distinctZones = [];
 					remotes.forEach( function( i ) {
 						if( distinct.indexOf( i.instance ) < 0 )
 							distinct.push( i.instance );
+						if( distinctZones.indexOf( i.zone ) < 0 )
+							distinctZones.push( i.zone );
 					} );
 					assert.equal( 6, distinct.length );
+					assert.equal( clusterConfig.zones.length, distinctZones.length );
+
 					done();
 				} );
 		} );
@@ -389,6 +398,7 @@ describe( 'ProcessingCluster', function() {
 		});
 		var clusterConfig = {
 			region: 'us-east-1',
+			zones: [ 'us-east-1a', 'us-east-1b', 'us-east-1d' ],
 			ami: 'ami-50%',
 			keypair: 'NOVA-Util',
 			type: 't1.micro',
